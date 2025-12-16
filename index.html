@@ -1,511 +1,158 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>トレカキングダム 買取比較</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
-  <style>
-    /* CSSはそのまま */
-    :root {
-      --primary: #0066cc;
-      --primary-light: #e6f0ff;
-      --accent: #e60012;
-      --accent-bg: #fff0f0;
-      --bg: #f0f2f5;
-      --card-bg: #ffffff;
-      --text: #222;
-      --text-sub: #555;
-      --border: #dfe3e8;
-      --radius: 12px;
-      --shadow: 0 2px 8px rgba(0,0,0,0.06);
-      --f-size: 15px; 
-      --search-height: 76px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>データ確認アプリ</title>
+    <style>
+        /* 基本設定：フォントや背景 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            display: flex;
+            justify_content: center; /* PCで中央寄せ */
+            align-items: flex-start;
+            min-height: 100vh;
+        }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
+        /* メインのカード枠（PCとスマホで幅が変わる） */
+        .container {
+            background-color: #fff;
+            width: 100%;
+            max-width: 600px; /* PCでも広がりすぎないように制限 */
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 24px;
+            box-sizing: border-box;
+        }
 
-    header { background: #fff; padding: 16px 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; z-index: 20; }
-    h1 { margin: 0; font-size: 22px; color: var(--primary); font-weight: 900; letter-spacing: 0.05em; }
-    h1 span { color: var(--text); font-size: 15px; font-weight: normal; margin-left: 8px; }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 24px;
+            color: #1a73e8;
+        }
 
-    .search-sticky { position: sticky; top: 0; z-index: 100; background: rgba(240, 242, 245, 0.95); backdrop-filter: blur(10px); padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.05); height: var(--search-height); display: flex; align-items: center; justify-content: center; }
-    .search-bar { display: flex; gap: 8px; width: 100%; max-width: 900px; margin: 0 auto; }
-    .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; background: #fff; border-radius: 50px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.2s; padding-right: 6px; }
-    .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
-    .input-wrapper input { border: none; background: transparent; padding: 12px 20px; font-size: 16px; flex: 1; outline: none; border-radius: 50px; }
-    .btn-copy-input { border: none; background: transparent; cursor: pointer; font-size: 20px; padding: 8px 14px; color: #bbb; transition: color 0.2s; line-height: 1; display: flex; align-items: center; }
-    .btn-copy-input:hover { color: var(--primary); }
-    .btn-search { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--primary); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,102,204,0.3); }
-    .btn-search:active { transform: scale(0.95); }
-    .btn-search svg { width: 24px; height: 24px; fill: white; }
+        /* ボタンのデザイン */
+        button {
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #1a73e8;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
 
-    .controls-area { max-width: 1200px; margin: 0 auto; padding: 16px; }
-    .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: center; white-space: nowrap; margin-bottom: 12px;}
-    .filter-scroll::-webkit-scrollbar { display: none; }
-    
-    .chip { white-space: nowrap; padding: 0 16px; border-radius: 24px; background: #fff; border: 1px solid var(--border); color: var(--text-sub); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; height: 44px; flex-shrink: 0; }
-    .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 6px rgba(0,102,204,0.25); }
-    .chip select { border: none; background: transparent; color: inherit; font: inherit; outline: none; padding-right: 4px; cursor: pointer; height: 100%; font-size: 14px; }
-    .chip select option { color: #333; }
-    .chip input.direct-input { border: none; background: transparent; outline: none; color: inherit; width: 90px; font-size: 14px; font-weight: 500; height: 100%; }
-    .chip input.direct-input::placeholder { color: #aaa; font-weight: normal; }
-    .chip.active input.direct-input::placeholder { color: rgba(255,255,255,0.7); }
+        button:hover {
+            background-color: #1557b0;
+        }
 
-    details.guarantee-box { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
-    details.guarantee-box summary { padding: 14px 20px; font-weight: 700; font-size: 14px; color: var(--primary); cursor: pointer; outline: none; display: flex; align-items: center; justify-content: space-between; }
-    details.guarantee-box summary::after { content: "▼"; font-size: 12px; opacity: 0.5; }
-    details.guarantee-box[open] summary::after { content: "▲"; }
-    
-    .g-table { width:100%; font-size:13px; border-collapse:collapse; text-align:center; }
-    .g-table th { padding:12px 8px; border:1px solid #dfe3e8; background:#e9ecef; color:#333; font-weight:bold; }
-    .g-table td { padding:10px; border:1px solid #eee; }
-    .g-title-cell { text-align:left; font-weight:bold; color:#0066cc; background:#fafafa; }
+        button:active {
+            transform: scale(0.98);
+        }
 
-    .spinner { display: none; flex-direction: column; align-items: center; gap: 12px; padding: 40px; color: var(--text-sub); font-size: 14px; }
-    .spinner-circle { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin{to{transform:rotate(360deg)}}
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
 
-    .price { font-family: 'Roboto', sans-serif; font-weight: 700; letter-spacing: -0.5px; font-size: calc(var(--f-size) + 2px); }
-    .price-yen { font-size: 0.8em; margin-right: 1px; font-weight: normal; }
-    .price-empty { color: #ccc; font-size: calc(var(--f-size) - 2px); }
-    
-    .btn-copy { display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; padding: 4px 10px; border-radius: 6px; background: #f0f2f5; color: #0066cc; border: 1px solid #ccd; font-size: 12px; cursor: pointer; vertical-align: middle; user-select: none; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
-    .btn-copy:active { transform: scale(0.95); background: #eef; }
-    
-    .clickable-price { cursor: pointer; position: relative; transition: color 0.1s; }
-    .clickable-price:hover { color: var(--primary); text-decoration: underline; }
+        /* 結果表示エリア */
+        #result-area {
+            margin-top: 24px;
+            padding: 16px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            min-height: 60px;
+            white-space: pre-wrap; /* 改行をそのまま表示 */
+            font-size: 16px;
+            line-height: 1.6;
+        }
 
-    .card-grid { display: grid; gap: 16px; }
-    .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: grid; grid-template-columns: 90px 1fr; position: relative; }
-    .card-img { grid-row: 1 / -1; width: 100%; height: 100%; background: #fafafa; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
-    .card-img img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
-    .card-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-    
-    .card-title { font-size: var(--f-size); font-weight: 700; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .king-prices { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: var(--primary-light); border-radius: 8px; padding: 8px; }
-    .kp-item { text-align: center; display: flex; flex-direction: column; }
-    .kp-label { font-size: 10px; color: var(--primary); font-weight: bold; margin-bottom: 2px; }
-    .kp-val { font-size: calc(var(--f-size) - 2px); color: #333; font-weight: 700; }
-
-    .rush-row { grid-column: 1 / -1; border-top: 1px dashed var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: #fffbfc; }
-    .rush-label { font-size: calc(var(--f-size) - 3px); color: var(--accent); font-weight: bold; }
-    .rush-val { font-size: calc(var(--f-size) + 4px); color: var(--accent); font-weight: 900; }
-
-    @media (min-width: 768px) {
-      .card-grid { display: none; }
-      .desktop-table-wrap { display: block !important; background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: visible; border: 1px solid #eee; }
-      table.res-tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--f-size); }
-      table.res-tbl th { background: #f8f9fa; padding: 16px 12px; text-align: center; font-weight: 700; color: #555; border-bottom: 2px solid #ddd; position: sticky; top: var(--search-height); z-index: 10; white-space: nowrap; }
-      table.res-tbl td { padding: 14px 12px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle; }
-      table.res-tbl tr:hover { background: #f0f7ff; }
-      table.res-tbl th:first-child { text-align: left; }
-      table.res-tbl td:first-child { text-align: left; font-weight: bold; color: #333; line-height: 1.6; }
-      .rush-col { background: var(--accent-bg); border-left: 2px solid #ffdede; color: var(--accent); font-weight: bold; font-size: calc(var(--f-size) + 2px); }
-      th.rush-header { background: #ffebeb; color: var(--accent); border-left: 2px solid #ffdede; }
-      img.tbl-thumb { width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid #eee; }
-    }
-    .desktop-table-wrap { display: none; }
-
-    mark { background: rgba(255, 213, 0, 0.4); color: inherit; padding: 0; }
-    .pager { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-    .pager btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); font-size: 16px; }
-    .pager btn:hover { background: #f0f0f0; }
-    .pager btn.disabled { opacity: 0.4; pointer-events: none; }
-
-    #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-    #modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-    
-    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #222; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 10000; box-shadow: 0 6px 16px rgba(0,0,0,0.3); font-weight: 500; }
-    #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
-  </style>
+        .loading {
+            color: #666;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        /* エラー時の表示 */
+        .error {
+            color: #d93025;
+            background-color: #fce8e6;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
 
-  <header><h1>トレカキングダム <span>買取比較検索</span></h1></header>
-
-  <div class="search-sticky">
-    <div class="search-bar">
-      <div class="input-wrapper">
-        <input type="text" id="keyword" placeholder="カード名・型番 (スペース=AND)" enterkeyhint="search">
-        <button class="btn-copy-input" onclick="copyKeyword()" title="コピー">📋</button>
-      </div>
-      <button class="btn-search" onclick="search()">
-        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 3 13.09 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      </button>
-    </div>
-  </div>
-
-  <div class="controls-area">
-    <div class="filter-scroll">
-      <div class="chip">📂 <select id="categorySelect"><option value="">全カテゴリ</option></select></div>
-      <div class="chip" id="thresholdChip">🚫 <input type="number" id="thresholdInput" class="direct-input" placeholder="下限なし(円)"></div>
-      <div class="chip" onclick="toggleSort()"><span id="sortIcon">⇅</span> <span id="sortLabel">標準(名前順)</span></div>
-      <div class="chip">Aa <select id="fontSizeSelect"><option value="13px">小</option><option value="15px" selected>中</option><option value="17px">大</option><option value="20px">特大</option></select></div>
-      <div class="chip">📄 <select id="pageSizeSelect"><option value="50">50件</option><option value="100" selected>100件</option><option value="200">200件</option><option value="all">全件</option></select></div>
+    <div class="container">
+        <h1>最新データ取得</h1>
+        
+        <button id="fetch-btn" onclick="fetchData()">データを更新する</button>
+        
+        <div id="result-area">ここに結果が表示されます</div>
     </div>
 
-    <div class="filter-scroll" id="initialBar"></div>
+    <script>
+        // 提供されたAPIのURL
+        const API_URL = "https://script.google.com/macros/s/AKfycbwXJ4In8PMlrW_NKomGLn3wo2myFIPl4HtlAIZ2z1ZPrSkz-eXL_aXKqXcaY-KWPnSj/exec";
 
-    <details class="guarantee-box">
-      <summary>⚡ 最低保証価格表を確認する</summary>
-      <div style="overflow-x:auto; padding:0 16px 16px;">
-        <table class="g-table">
-          <thead>
-            <tr><th>カード</th><th>A</th><th>A-</th><th>B</th><th>C</th><th>D</th></tr>
-          </thead>
-          <tbody>
-            <tr><td class="g-title-cell">PSA10保証</td><td>¥5,000</td><td>¥4,000</td><td>¥3,000</td><td>¥2,000</td><td>¥1,000</td></tr>
-            <tr><td class="g-title-cell">SAR保証</td><td>¥400</td><td>¥300</td><td>¥200</td><td>¥100</td><td>¥50</td></tr>
-            <tr><td class="g-title-cell">SR保証</td><td>¥200</td><td>¥150</td><td>¥100</td><td>¥50</td><td>¥20</td></tr>
-            <tr><td class="g-title-cell">AR保証</td><td>¥220</td><td>¥150</td><td>¥70</td><td>¥30</td><td>¥10</td></tr>
-            <tr><td class="g-title-cell">RR保証</td><td>¥10</td><td>¥5</td><td>¥5</td><td>¥1</td><td>¥1</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </details>
+        async function fetchData() {
+            const btn = document.getElementById('fetch-btn');
+            const resultArea = document.getElementById('result-area');
 
-    <div id="spinner" class="spinner">
-      <div class="spinner-circle"></div><span>データを取得しています...</span>
-    </div>
+            // ボタンを無効化（連打防止）＆読み込み中表示
+            btn.disabled = true;
+            btn.textContent = "読み込み中...";
+            resultArea.innerHTML = '<div class="loading">問い合わせ中...</div>';
 
-    <div id="result-container">
-      <div id="cardView" class="card-grid"></div>
-      <div id="tableView" class="desktop-table-wrap"></div>
-      <div id="pager" class="pager"></div>
-    </div>
-  </div>
+            try {
+                // APIにアクセス
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-  <div id="modal" onclick="this.style.display='none'"><img id="modalImage" src=""></div>
-  <div id="toast">✅ <span id="toastMsg"></span></div>
+                // JSONとして取得を試みる（テキストの場合はcatchへ）
+                const data = await response.json();
 
-  <script>
-    // ▼▼▼ あなたのGASウェブアプリURLに書き換えてください ▼▼▼
-    const API_URL = "https://script.google.com/macros/s/AKfycbwXJ4In8PMlrW_NKomGLn3wo2myFIPl4HtlAIZ2z1ZPrSkz-eXL_aXKqXcaY-KWPnSj/exec"; 
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+                // データの整形表示 (配列やオブジェクトの場合を見やすく)
+                let displayContent = "";
+                if (typeof data === 'object') {
+                    // JSONが見やすいように整形
+                    displayContent = JSON.stringify(data, null, 2);
+                    // 引用符などを消して見やすくしたい場合は以下のように加工も可能
+                    // displayContent = displayContent.replace(/[{}"]/g, ''); 
+                } else {
+                    displayContent = data;
+                }
 
-    const state = {
-      rows: [], page: 1, pageSize: 100,
-      sort: { idx: 0, dir: 'asc' },
-      terms: { andTerms:[], orTerms:[] },
-      thresholdA: null, initialKey: 'ALL'
-    };
-    
-    const INITIALS = [
-      {k:'ALL',l:'全て'}, {k:'A',l:'あ'}, {k:'K',l:'か'}, {k:'S',l:'さ'}, {k:'T',l:'た'},
-      {k:'N',l:'な'}, {k:'H',l:'は'}, {k:'M',l:'ま'}, {k:'Y',l:'や'}, {k:'R',l:'ら'}, {k:'W',l:'わ'}, {k:'MISC',l:'他'}
-    ];
+                resultArea.textContent = displayContent;
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // カテゴリ取得
-      fetch(API_URL + "?action=categories")
-        .then(r => r.json())
-        .then(list => {
-          const sel = document.getElementById('categorySelect');
-          list.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.innerText = c; sel.appendChild(opt); });
-        })
-        .catch(e => console.error("Category Load Error", e));
-
-      buildInitialBar();
-      setupUI();
-      search(); // 初期ロード
-      
-      document.getElementById('keyword').addEventListener('keydown', e => { 
-        if(e.key === 'Enter'){
-          if(e.target.value.trim() === '') return;
-          search(); 
-        }
-      });
-      document.getElementById('categorySelect').addEventListener('change', () => search());
-      document.getElementById('pageSizeSelect').addEventListener('change', e => {
-        state.pageSize = e.target.value==='all' ? Infinity : Number(e.target.value);
-        state.page = 1; render();
-      });
-    });
-
-    function setupUI(){
-      const fSize = localStorage.getItem("tk_f") || "15px";
-      document.documentElement.style.setProperty('--f-size', fSize);
-      document.getElementById('fontSizeSelect').value = fSize;
-      document.getElementById('fontSizeSelect').addEventListener('change', e => {
-        const v = e.target.value;
-        document.documentElement.style.setProperty('--f-size', v);
-        localStorage.setItem("tk_f", v);
-      });
-
-      const tInput = document.getElementById('thresholdInput');
-      const sThr = localStorage.getItem("tk_t");
-      if(sThr) { 
-        tInput.value = sThr; 
-        state.thresholdA = Number(sThr);
-        document.getElementById('thresholdChip').classList.add('active');
-      }
-
-      tInput.addEventListener('input', (e) => {
-         const val = e.target.value;
-         if(val && Number(val) > 0) {
-           state.thresholdA = Number(val);
-           document.getElementById('thresholdChip').classList.add('active');
-         } else {
-           state.thresholdA = null;
-           document.getElementById('thresholdChip').classList.remove('active');
-         }
-         localStorage.setItem("tk_t", val);
-         render();
-      });
-    }
-
-    function search(){
-      const kw = document.getElementById('keyword').value;
-      const cat = document.getElementById('categorySelect').value;
-      const spinner = document.getElementById('spinner');
-      
-      spinner.style.display = 'flex';
-      document.getElementById('cardView').innerHTML = '';
-      document.getElementById('tableView').innerHTML = '';
-      document.getElementById('pager').innerHTML = '';
-
-      state.terms = parseQuery(kw);
-
-      // GASへのデータ問い合わせ (fetch)
-      const targetUrl = `${API_URL}?action=search&keyword=${encodeURIComponent(kw)}&category=${encodeURIComponent(cat)}`;
-      
-      fetch(targetUrl)
-        .then(res => res.json())
-        .then(data => {
-            spinner.style.display = 'none';
-            state.rows = data.rows || [];
-            state.page = 1;
-            state.sort = { idx: 0, dir: 'asc' }; 
-            
-            if(state.rows.length === 0) {
-              if(!kw && !cat) {
-                document.getElementById('cardView').innerHTML = 
-                  `<div style="text-align:center; padding:60px 20px; color:#aaa;">
-                      <div style="font-size:40px; margin-bottom:10px;">🔍</div>
-                      <div>キーワードを入力するか、<br>カテゴリを選択して検索してください</div>
-                    </div>`;
-              } else {
-                document.getElementById('cardView').innerHTML = 
-                  `<div style="text-align:center; padding:40px; color:#999; font-size:15px;">条件に一致するカードが見つかりませんでした</div>`;
-              }
-            } else {
-              render();
+            } catch (error) {
+                console.error('Error:', error);
+                // JSONパースエラーなどの場合、テキストとして表示を試みる
+                try {
+                     const textResponse = await fetch(API_URL).then(res => res.text());
+                     resultArea.textContent = textResponse;
+                } catch (e) {
+                    resultArea.innerHTML = `<div class="error">エラーが発生しました。<br>${error.message}</div>`;
+                }
+            } finally {
+                // ボタンを元に戻す
+                btn.disabled = false;
+                btn.textContent = "データを更新する";
             }
-        })
-        .catch(e => {
-            spinner.style.display = 'none';
-            alert('データ取得エラー: ' + e.message);
-        });
-    }
-
-    function filterRows(){
-      let res = state.rows;
-      if(state.thresholdA !== null) {
-        res = res.filter(r => { const p = Number(r[2]); return isNaN(p) || p >= state.thresholdA; });
-      }
-      if(state.initialKey !== 'ALL') {
-        res = res.filter(r => getInitialGroup(r[0]) === state.initialKey);
-      }
-      const { idx, dir } = state.sort;
-      res.sort((a,b) => {
-        const va = a[idx], vb = b[idx];
-        const isNum = idx >= 2; 
-        if(isNum) return ( (Number(va)||0) - (Number(vb)||0) ) * (dir==='asc'?1:-1);
-        return String(va||"").localeCompare(String(vb||""), 'ja') * (dir==='asc'?1:-1);
-      });
-      return res;
-    }
-
-    function render(){
-      const all = filterRows();
-      const total = all.length;
-      const size = state.pageSize;
-      const maxPage = Math.ceil(total / size) || 1;
-      if(state.page > maxPage) state.page = 1;
-      
-      const start = (state.page - 1) * size;
-      const end = Math.min(start + size, total);
-      const viewRows = all.slice(start, end);
-      
-      renderMobile(viewRows);
-      renderDesktop(viewRows);
-      renderPager(state.page, maxPage);
-    }
-
-    function renderMobile(rows){
-      const container = document.getElementById('cardView');
-      let html = '';
-      
-      rows.forEach(r => {
-        const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
-        const imgTag = (img && /^http/.test(img)) 
-          ? `<img src="${img}" loading="lazy" onclick="showModal('${img}')">` 
-          : `<span style="color:#ccc;font-size:10px">NO IMG</span>`;
-        
-        const safeName = highlight(name);
-        const modelMatch = name.match(/\{(.+?)\}/);
-        const copyTextVal = modelMatch ? modelMatch[1] : name;
-        const copyLabel = modelMatch ? "型番" : "名";
-
-        const prices = [
-          {l:'A', v:pA}, {l:'A-', v:pAm}, {l:'B', v:pB}, {l:'C', v:pC}, {l:'D', v:pD}
-        ];
-        let pGrid = '';
-        prices.forEach(p => {
-          const raw = p.v; 
-          const val = fmtPrice(raw);
-          const clickAttr = (raw && !isNaN(raw)) ? `onclick="copyText('${raw}', '¥${Number(raw).toLocaleString()}')"` : "";
-          const cls = (raw && !isNaN(raw)) ? "clickable-price" : "";
-          pGrid += `<div class="kp-item" ${clickAttr}><span class="kp-label">${p.l}</span><span class="kp-val ${!raw?'price-empty':''} ${cls}">${val}</span></div>`;
-        });
-
-        const rushVal = fmtPrice(pRush);
-        const rushClick = (pRush && !isNaN(pRush)) ? `onclick="copyText('${pRush}', 'ラッシュ価格')"` : "";
-        const rushDisplay = (pRush) 
-          ? `<div class="rush-row" ${rushClick}><span class="rush-label">🔥 カードラッシュ (A)</span><span class="rush-val price clickable-price">${rushVal}</span></div>`
-          : ``;
-
-        html += `
-          <div class="card">
-            <div class="card-img">${imgTag}</div>
-            <div class="card-body">
-              <div class="card-title">${safeName}<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span></div>
-              <div class="king-prices">${pGrid}</div>
-            </div>
-            ${rushDisplay}
-          </div>
-        `;
-      });
-      container.innerHTML = html;
-    }
-
-    function renderDesktop(rows){
-      const container = document.getElementById('tableView');
-      if(window.innerWidth < 768) { container.innerHTML = ""; return; }
-
-      let html = `<table class="res-tbl"><thead><tr>`;
-      const headers = [
-        {n:"カード名", w:"auto"}, {n:"画像", w:"70px"},
-        {n:"状態A", w:""}, {n:"状態A-", w:""}, {n:"状態B", w:""}, {n:"状態C", w:""}, {n:"状態D", w:""},
-        {n:"ラッシュA", w:"", cls:"rush-header"}
-      ];
-      headers.forEach(h => html += `<th class="${h.cls||''}" width="${h.w}">${h.n}</th>`);
-      html += `</tr></thead><tbody>`;
-
-      rows.forEach(r => {
-        const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
-        const imgTag = (img && /^http/.test(img)) ? `<img class="tbl-thumb" src="${img}" onclick="showModal('${img}')">` : "";
-        
-        const modelMatch = name.match(/\{(.+?)\}/);
-        const copyTextVal = modelMatch ? modelMatch[1] : name;
-        const copyLabel = modelMatch ? "型番" : "名";
-        const copyBtn = `<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span>`;
-
-        const mkPriceTd = (val, extraCls="") => {
-           if(val && !isNaN(val)) return `<td class="price clickable-price ${extraCls}" onclick="copyText('${val}','¥${Number(val).toLocaleString()}')">${fmtPrice(val)}</td>`;
-           return `<td class="price ${extraCls}">${fmtPrice(val)}</td>`;
-        };
-
-        html += `<tr>
-          <td>${highlight(name)}${copyBtn}</td>
-          <td>${imgTag}</td>
-          ${mkPriceTd(pA)} ${mkPriceTd(pAm)} ${mkPriceTd(pB)} ${mkPriceTd(pC)} ${mkPriceTd(pD)}
-          ${mkPriceTd(pRush, "rush-col")}
-        </tr>`;
-      });
-      html += `</tbody></table>`;
-      container.innerHTML = html;
-    }
-
-    function renderPager(curr, max){
-      const p = document.getElementById('pager');
-      if(max <= 1) { p.innerHTML = ""; return; }
-      const makeBtn = (lbl, target, dis) => `<btn onclick="state.page=${target};render();window.scrollTo({top:0,behavior:'smooth'})" class="${dis?'disabled':''}">${lbl}</btn>`;
-      p.innerHTML = makeBtn("«", 1, curr===1) + makeBtn("‹", curr-1, curr===1) + 
-                    `<span style="display:flex;align-items:center;font-size:14px;color:#666;">${curr} / ${max}</span>` +
-                    makeBtn("›", curr+1, curr===max) + makeBtn("»", max, curr===max);
-    }
-
-    function fmtPrice(v){ return (v === "" || v == null) ? "-" : (isNaN(v) ? v : `<span class="price-yen">¥</span>${Number(v).toLocaleString()}`); }
-    function highlight(str){
-      if(!str) return "";
-      let html = String(str);
-      [...state.terms.andTerms, ...state.terms.orTerms].forEach(k => {
-        if(k) html = html.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), "gi"), m => `<mark>${m}</mark>`);
-      });
-      return html;
-    }
-    function parseQuery(raw){
-      const n = (raw||"").replace(/[\u3041-\u3096]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)).toLowerCase().trim();
-      if(!n) return {andTerms:[], orTerms:[]};
-      if(n.includes('|')) return {andTerms:[], orTerms:n.split('|').map(s=>s.trim()).filter(Boolean)};
-      return {andTerms:n.split(/\s+/).map(s=>s.trim()).filter(Boolean), orTerms:[]};
-    }
-    
-    function getInitialGroup(name){
-      const c = (name||"").charAt(0);
-      if(/[あ-おア-オヴ]/.test(c)) return 'A'; 
-      if(/[か-ごカ-ゴ]/.test(c)) return 'K'; 
-      if(/[さ-ぞサ-ゾ]/.test(c)) return 'S'; 
-      if(/[た-どタ-ド]/.test(c)) return 'T'; 
-      if(/[な-のナ-ノ]/.test(c)) return 'N'; 
-      if(/[は-ぽハ-ポ]/.test(c)) return 'H'; 
-      if(/[ま-もマ-モ]/.test(c)) return 'M'; 
-      if(/[や-よヤ-ヨ]/.test(c)) return 'Y'; 
-      if(/[ら-ろラ-ロ]/.test(c)) return 'R'; 
-      if(/[わ-んワ-ン]/.test(c)) return 'W'; 
-      return 'MISC';
-    }
-
-    function buildInitialBar(){
-      const bar = document.getElementById('initialBar');
-      bar.innerHTML = "";
-      INITIALS.forEach(i => {
-        const d = document.createElement('div');
-        d.className = `chip ${state.initialKey===i.k ? 'active' : ''}`;
-        d.innerText = i.l;
-        d.onclick = () => { state.initialKey = i.k; buildInitialBar(); render(); };
-        bar.appendChild(d);
-      });
-    }
-
-    function toggleSort(){
-      const lbl = document.getElementById('sortLabel');
-      const chip = document.getElementById('sortIcon').parentElement;
-      if(state.sort.idx === 0){
-        state.sort = { idx: 2, dir: 'desc' }; lbl.innerText = "価格順(高)"; chip.classList.add('active');
-      } else {
-        state.sort = { idx: 0, dir: 'asc' }; lbl.innerText = "標準(名前順)"; chip.classList.remove('active');
-      }
-      render();
-    }
-
-    function copyKeyword(){
-      const val = document.getElementById('keyword').value;
-      if(!val) return copyText(" ", "空です");
-      copyText(val, "検索ワードをコピーしました");
-    }
-
-    function copyText(txt, msg){
-      navigator.clipboard.writeText(txt).then(() => {
-        const t = document.getElementById('toast');
-        document.getElementById('toastMsg').innerText = msg;
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-      });
-    }
-    function showModal(src){
-      document.getElementById('modalImage').src = src;
-      document.getElementById('modal').style.display = 'flex';
-    }
-    
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => render(), 200);
-    });
-  </script>
+        }
+    </script>
 </body>
 </html>
