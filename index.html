@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
-    /* CSSはそのまま */
     :root {
       --primary: #0066cc;
       --primary-light: #e6f0ff;
@@ -30,8 +29,31 @@
     h1 { margin: 0; font-size: 22px; color: var(--primary); font-weight: 900; letter-spacing: 0.05em; }
     h1 span { color: var(--text); font-size: 15px; font-weight: normal; margin-left: 8px; }
     
-    /* 更新日時用のスタイル */
-    #lastUpdatedArea { font-size: 12px; color: #666; margin-top: 6px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    /* ▼▼▼ 追加・変更したCSS ▼▼▼ */
+    .header-info-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; }
+    
+    #lastUpdatedArea { font-size: 12px; color: #666; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+
+    .refresh-btn {
+      background: #fff;
+      border: 1px solid #ddd;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-weight: bold;
+    }
+    .refresh-btn:hover { background: var(--primary-light); border-color: var(--primary); }
+    .refresh-btn:active { transform: scale(0.96); }
+    .refresh-btn svg { transition: transform 0.8s ease; }
+    .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
     .search-sticky { position: sticky; top: 0; z-index: 100; background: rgba(240, 242, 245, 0.95); backdrop-filter: blur(10px); padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.05); height: var(--search-height); display: flex; align-items: center; justify-content: center; }
     .search-bar { display: flex; gap: 8px; width: 100%; max-width: 900px; margin: 0 auto; }
@@ -128,11 +150,23 @@
 
   <header>
     <h1>トレカキングダム <span>買取比較検索</span></h1>
-    <div id="lastUpdatedArea">
-      <span class="spinner-circle" style="width:12px;height:12px;border-width:2px;"></span> 
-      <span style="font-size:11px;">日付確認中...</span>
+    
+    <div class="header-info-row">
+      <div id="lastUpdatedArea">
+        <span class="spinner-circle" style="width:12px;height:12px;border-width:2px;"></span> 
+        <span style="font-size:11px;">日付確認中...</span>
+      </div>
+      
+      <button class="refresh-btn" onclick="manualReload()" id="btnReload" title="最新の情報を再取得">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 4v6h-6"></path>
+          <path d="M1 20v-6h6"></path>
+          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+        </svg>
+        最新取得
+      </button>
     </div>
-  </header>
+    </header>
 
   <div class="search-sticky">
     <div class="search-bar">
@@ -204,24 +238,54 @@
       {k:'N',l:'な'}, {k:'H',l:'は'}, {k:'M',l:'ま'}, {k:'Y',l:'や'}, {k:'R',l:'ら'}, {k:'W',l:'わ'}, {k:'MISC',l:'他'}
     ];
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // ▼追加: 最終更新日時の取得
-      fetch(API_URL + "?action=last_updated")
+    // ▼▼▼ 追加: 更新日時を取得する関数 ▼▼▼
+    function fetchLastUpdated() {
+      const area = document.getElementById('lastUpdatedArea');
+      // ローディング表示
+      area.innerHTML = `<span class="spinner-circle" style="width:12px;height:12px;border-width:2px;"></span><span style="font-size:11px;">確認中...</span>`;
+      
+      // キャッシュ回避のために時刻(t)をパラメータに付与
+      fetch(API_URL + "?action=last_updated&t=" + new Date().getTime())
         .then(r => r.json())
         .then(res => {
-            const area = document.getElementById('lastUpdatedArea');
             if (res.status && res.date) {
                 const d = new Date(res.date);
                 const fmt = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
                 area.innerHTML = `🔄 最終更新: <b>${fmt}</b>`;
             } else {
-                area.innerHTML = "";
+                area.innerHTML = "更新日時不明";
             }
         })
         .catch(e => {
             console.error("Date error:", e);
-            document.getElementById('lastUpdatedArea').innerText = "";
+            area.innerHTML = "更新日時エラー";
         });
+    }
+
+    // ▼▼▼ 追加: 手動リロードボタンの処理 ▼▼▼
+    function manualReload() {
+      const btn = document.getElementById('btnReload');
+      btn.classList.add('spinning'); // 回転開始
+      
+      // 日付再取得
+      fetchLastUpdated();
+      
+      // データ再検索（現在のアクティブな条件で）
+      search();
+
+      // 少し待ってから完了通知（見た目のフィードバック）
+      setTimeout(() => {
+        btn.classList.remove('spinning');
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').innerText = "最新情報を確認しました";
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+      }, 1000);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // 初期ロード時も共通関数を使用
+      fetchLastUpdated();
 
       // カテゴリ取得
       fetch(API_URL + "?action=categories")
