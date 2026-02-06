@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
-    /* ▼▼▼ 元のデザインCSSそのまま ▼▼▼ */
     :root {
       --primary: #0066cc;
       --primary-light: #e6f0ff;
@@ -84,7 +83,15 @@
 
     .card-grid { display: grid; gap: 16px; }
     .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: grid; grid-template-columns: 90px 1fr; position: relative; }
+    
+    /* ▼▼▼ ラッシュ無し時の色付け用クラス ▼▼▼ */
+    .row-no-rush { background-color: #fff0f0 !important; border: 1px solid #ffcccc; }
+    tr.row-no-rush td { background-color: #fff0f0 !important; }
+    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
     .card-img { grid-row: 1 / -1; width: 100%; height: 100%; background: #fafafa; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
+    .row-no-rush .card-img { background: #fff0f0; } /* 画像背景も合わせる */
+
     .card-img img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
     .card-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
     
@@ -95,6 +102,8 @@
     .kp-val { font-size: calc(var(--f-size) - 2px); color: #333; font-weight: 700; }
 
     .rush-row { grid-column: 1 / -1; border-top: 1px dashed var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: #fffbfc; }
+    .row-no-rush .rush-row { background: #ffebeb; border-top-color: #ffcccc; }
+
     .rush-label { font-size: calc(var(--f-size) - 3px); color: var(--accent); font-weight: bold; }
     .rush-val { font-size: calc(var(--f-size) + 4px); color: var(--accent); font-weight: 900; }
 
@@ -231,20 +240,16 @@
       });
     });
 
-    // ▼▼▼ ロジックの変更点：初回に全件取得してJSでフィルタリングする ▼▼▼
-
     async function loadAllData() {
       const spinner = document.getElementById('spinner');
       spinner.style.display = 'flex';
       
       try {
-        // 全データをリクエスト (action=search で keyword なし)
         const res = await fetch(API_URL + "?action=search");
         const json = await res.json();
         
         masterData = json.rows || [];
         
-        // 初回表示
         applyLocalFilter();
         spinner.style.display = 'none';
 
@@ -255,42 +260,34 @@
       }
     }
 
-    // クライアントサイドでのフィルタリング実行関数
     function applyLocalFilter() {
       const kw = document.getElementById('keyword').value;
       const cat = document.getElementById('categorySelect').value;
       
       state.terms = parseQuery(kw);
       
-      // フィルタリング処理
       state.filteredRows = masterData.filter(row => {
         // [0]名, [1]画像, [2]A, [3]A-, [4]B, [5]C, [6]D, [7]ラッシュ, [8]カテゴリ
         const name = String(row[0] || "");
         const category = String(row[8] || "");
-        const priceA = Number(row[2]); // キングダムA
+        const priceA = Number(row[2]); 
 
-        // 1. カテゴリフィルタ
         if (cat && category !== cat) return false;
 
-        // 2. キーワードフィルタ
         if (state.terms.andTerms.length || state.terms.orTerms.length) {
           const searchTxt = normalizeStr(name);
-          // OR検索
           if (state.terms.orTerms.length > 0) {
             if (!state.terms.orTerms.some(t => searchTxt.includes(t))) return false;
           }
-          // AND検索
           if (state.terms.andTerms.length > 0) {
             if (!state.terms.andTerms.every(t => searchTxt.includes(t))) return false;
           }
         }
 
-        // 3. 価格下限フィルタ
         if (state.thresholdA !== null) {
           if (isNaN(priceA) || priceA < state.thresholdA) return false;
         }
 
-        // 4. 頭文字フィルタ
         if (state.initialKey !== 'ALL') {
           if (getInitialGroup(name) !== state.initialKey) return false;
         }
@@ -298,7 +295,6 @@
         return true;
       });
 
-      // ソート処理
       const { idx, dir } = state.sort;
       state.filteredRows.sort((a,b) => {
         const va = a[idx], vb = b[idx];
@@ -326,7 +322,7 @@
       renderPager(state.page, maxPage);
     }
 
-    // モバイル表示 (元のデザイン)
+    // モバイル表示 (条件付きクラス付与)
     function renderMobile(rows){
       const container = document.getElementById('cardView');
       let html = '';
@@ -337,21 +333,22 @@
       }
 
       rows.forEach(r => {
-        // merged_dataの列順: [0]名, [1]画像, [2]A, [3]A-, [4]B, [5]C, [6]D, [7]ラッシュ, [8]カテゴリ
         const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
         
+        // ▼▼▼ ラッシュ価格がない場合はクラスを付与 ▼▼▼
+        const hasRush = (pRush && !isNaN(pRush));
+        const extraClass = hasRush ? "" : "row-no-rush";
+
         const imgTag = (img && /^http/.test(img)) 
           ? `<img src="${img}" loading="lazy" onclick="showModal('${img}')">` 
           : `<span style="color:#ccc;font-size:10px">NO IMG</span>`;
         
         const safeName = highlight(name);
         
-        // 型番抽出ロジック
         const modelMatch = name.match(/\{(.+?)\}/);
         const copyTextVal = modelMatch ? modelMatch[1] : name;
         const copyLabel = modelMatch ? "型番" : "名";
 
-        // 価格グリッド生成
         const prices = [
           {l:'A', v:pA}, {l:'A-', v:pAm}, {l:'B', v:pB}, {l:'C', v:pC}, {l:'D', v:pD}
         ];
@@ -364,15 +361,18 @@
           pGrid += `<div class="kp-item" ${clickAttr}><span class="kp-label">${p.l}</span><span class="kp-val ${!raw?'price-empty':''} ${cls}">${val}</span></div>`;
         });
 
-        // ラッシュ価格表示
         const rushVal = fmtPrice(pRush);
         const rushClick = (pRush && !isNaN(pRush)) ? `onclick="copyText('${pRush}', 'ラッシュ価格')"` : "";
-        const rushDisplay = (pRush) 
-          ? `<div class="rush-row" ${rushClick}><span class="rush-label">🔥 カードラッシュ (A)</span><span class="rush-val price clickable-price">${rushVal}</span></div>`
-          : ``;
+        
+        // ラッシュが無い場合、表示は「-」か空にするかですが、ここでは行全体の色が変わるのでそのまま表示
+        const rushDisplay = `
+          <div class="rush-row" ${rushClick}>
+            <span class="rush-label">🔥 カードラッシュ (A)</span>
+            <span class="rush-val price clickable-price">${rushVal}</span>
+          </div>`;
 
         html += `
-          <div class="card">
+          <div class="card ${extraClass}">
             <div class="card-img">${imgTag}</div>
             <div class="card-body">
               <div class="card-title">${safeName}<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span></div>
@@ -385,7 +385,7 @@
       container.innerHTML = html;
     }
 
-    // デスクトップ表示 (元のデザイン)
+    // デスクトップ表示 (条件付きクラス付与)
     function renderDesktop(rows){
       const container = document.getElementById('tableView');
       if(window.innerWidth < 768) { container.innerHTML = ""; return; }
@@ -406,6 +406,11 @@
 
       rows.forEach(r => {
         const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
+        
+        // ▼▼▼ ラッシュ価格がない場合はクラスを付与 ▼▼▼
+        const hasRush = (pRush && !isNaN(pRush));
+        const trClass = hasRush ? "" : "row-no-rush";
+
         const imgTag = (img && /^http/.test(img)) ? `<img class="tbl-thumb" src="${img}" onclick="showModal('${img}')">` : "";
         
         const modelMatch = name.match(/\{(.+?)\}/);
@@ -418,7 +423,7 @@
            return `<td class="price ${extraCls}">${fmtPrice(val)}</td>`;
         };
 
-        html += `<tr>
+        html += `<tr class="${trClass}">
           <td>${highlight(name)}${copyBtn}</td>
           <td>${imgTag}</td>
           ${mkPriceTd(pA)} ${mkPriceTd(pAm)} ${mkPriceTd(pB)} ${mkPriceTd(pC)} ${mkPriceTd(pD)}
@@ -429,7 +434,7 @@
       container.innerHTML = html;
     }
 
-    // --- 以下、ユーティリティ関数（元コードから維持） ---
+    // --- ユーティリティ関数 ---
 
     function fetchLastUpdated() {
       const area = document.getElementById('lastUpdatedArea');
@@ -450,7 +455,6 @@
         .then(r => r.json())
         .then(list => {
           const sel = document.getElementById('categorySelect');
-          // リセットして再構築
           sel.innerHTML = '<option value="">全カテゴリ</option>';
           list.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.innerText = c; sel.appendChild(opt); });
         });
@@ -566,7 +570,7 @@
       } else {
         state.sort = { idx: 0, dir: 'asc' }; lbl.innerText = "標準(名前順)"; chip.classList.remove('active');
       }
-      applyLocalFilter(); // ローカルソートなので再レンダリングのみ
+      applyLocalFilter(); 
     }
 
     function copyKeyword(){
