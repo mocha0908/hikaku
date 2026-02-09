@@ -84,13 +84,11 @@
     .card-grid { display: grid; gap: 16px; }
     .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: grid; grid-template-columns: 90px 1fr; position: relative; }
     
-    /* ▼▼▼ ラッシュ無し時の色付け用クラス ▼▼▼ */
     .row-no-rush { background-color: #fff0f0 !important; border: 1px solid #ffcccc; }
     tr.row-no-rush td { background-color: #fff0f0 !important; }
-    /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
 
     .card-img { grid-row: 1 / -1; width: 100%; height: 100%; background: #fafafa; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
-    .row-no-rush .card-img { background: #fff0f0; } /* 画像背景も合わせる */
+    .row-no-rush .card-img { background: #fff0f0; }
 
     .card-img img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
     .card-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
@@ -207,7 +205,6 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbwXJ4In8PMlrW_NKomGLn3wo2myFIPl4HtlAIZ2z1ZPrSkz-eXL_aXKqXcaY-KWPnSj/exec"; 
     
-    // 全データ保持用
     let masterData = [];
 
     const state = {
@@ -227,11 +224,8 @@
       fetchLastUpdated();
       buildInitialBar();
       setupUI();
-
-      // 初期ロード（カテゴリ取得と全データ取得を並列で）
       Promise.all([fetchCategories(), loadAllData()]);
 
-      // イベントリスナー
       document.getElementById('keyword').addEventListener('input', () => applyLocalFilter());
       document.getElementById('categorySelect').addEventListener('change', () => applyLocalFilter());
       document.getElementById('pageSizeSelect').addEventListener('change', e => {
@@ -240,23 +234,44 @@
       });
     });
 
+    // キャッシュを回避するためにタイムスタンプを付与
     async function loadAllData() {
       const spinner = document.getElementById('spinner');
       spinner.style.display = 'flex';
       
       try {
-        const res = await fetch(API_URL + "?action=search");
+        const timestamp = new Date().getTime();
+        const res = await fetch(`${API_URL}?action=search&t=${timestamp}`);
         const json = await res.json();
         
         masterData = json.rows || [];
-        
         applyLocalFilter();
-        spinner.style.display = 'none';
-
       } catch (e) {
         console.error("Data Load Error", e);
+        document.getElementById('cardView').innerHTML = '<div style="text-align:center;padding:20px;">読み込みに失敗しました。GASのデプロイ設定を確認してください。</div>';
+      } finally {
         spinner.style.display = 'none';
-        document.getElementById('cardView').innerHTML = '<div style="text-align:center;padding:20px;">読み込みに失敗しました</div>';
+      }
+    }
+
+    // 更新ボタンの挙動を安定化
+    async function manualReload() {
+      const btn = document.getElementById('btnReload');
+      if(btn.classList.contains('spinning')) return;
+
+      btn.classList.add('spinning');
+      try {
+        await fetchLastUpdated();
+        await loadAllData(); 
+        
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').innerText = "最新情報を取得しました";
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
+      } catch (e) {
+        alert("更新に失敗しました");
+      } finally {
+        btn.classList.remove('spinning');
       }
     }
 
@@ -267,7 +282,6 @@
       state.terms = parseQuery(kw);
       
       state.filteredRows = masterData.filter(row => {
-        // [0]名, [1]画像, [2]A, [3]A-, [4]B, [5]C, [6]D, [7]ラッシュ, [8]カテゴリ
         const name = String(row[0] || "");
         const category = String(row[8] || "");
         const priceA = Number(row[2]); 
@@ -322,123 +336,70 @@
       renderPager(state.page, maxPage);
     }
 
-    // モバイル表示 (条件付きクラス付与)
     function renderMobile(rows){
       const container = document.getElementById('cardView');
       let html = '';
-      
       if(rows.length === 0) {
         container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">条件に一致するカードが見つかりませんでした</div>`;
         return;
       }
-
       rows.forEach(r => {
         const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
-        
-        // ▼▼▼ ラッシュ価格がない場合はクラスを付与 ▼▼▼
         const hasRush = (pRush && !isNaN(pRush));
         const extraClass = hasRush ? "" : "row-no-rush";
-
         const imgTag = (img && /^http/.test(img)) 
           ? `<img src="${img}" loading="lazy" onclick="showModal('${img}')">` 
           : `<span style="color:#ccc;font-size:10px">NO IMG</span>`;
-        
         const safeName = highlight(name);
-        
         const modelMatch = name.match(/\{(.+?)\}/);
         const copyTextVal = modelMatch ? modelMatch[1] : name;
         const copyLabel = modelMatch ? "型番" : "名";
-
-        const prices = [
-          {l:'A', v:pA}, {l:'A-', v:pAm}, {l:'B', v:pB}, {l:'C', v:pC}, {l:'D', v:pD}
-        ];
+        const prices = [{l:'A', v:pA}, {l:'A-', v:pAm}, {l:'B', v:pB}, {l:'C', v:pC}, {l:'D', v:pD}];
         let pGrid = '';
         prices.forEach(p => {
-          const raw = p.v; 
-          const val = fmtPrice(raw);
+          const raw = p.v; const val = fmtPrice(raw);
           const clickAttr = (raw && !isNaN(raw)) ? `onclick="copyText('${raw}', '¥${Number(raw).toLocaleString()}')"` : "";
           const cls = (raw && !isNaN(raw)) ? "clickable-price" : "";
           pGrid += `<div class="kp-item" ${clickAttr}><span class="kp-label">${p.l}</span><span class="kp-val ${!raw?'price-empty':''} ${cls}">${val}</span></div>`;
         });
-
         const rushVal = fmtPrice(pRush);
-        const rushClick = (pRush && !isNaN(pRush)) ? `onclick="copyText('${pRush}', 'ラッシュ価格')"` : "";
-        
-        // ラッシュが無い場合、表示は「-」か空にするかですが、ここでは行全体の色が変わるのでそのまま表示
-        const rushDisplay = `
-          <div class="rush-row" ${rushClick}>
-            <span class="rush-label">🔥 カードラッシュ (A)</span>
-            <span class="rush-val price clickable-price">${rushVal}</span>
-          </div>`;
-
-        html += `
-          <div class="card ${extraClass}">
-            <div class="card-img">${imgTag}</div>
-            <div class="card-body">
-              <div class="card-title">${safeName}<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span></div>
-              <div class="king-prices">${pGrid}</div>
-            </div>
-            ${rushDisplay}
-          </div>
-        `;
+        const rushClick = hasRush ? `onclick="copyText('${pRush}', 'ラッシュ価格')"` : "";
+        html += `<div class="card ${extraClass}"><div class="card-img">${imgTag}</div><div class="card-body"><div class="card-title">${safeName}<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span></div><div class="king-prices">${pGrid}</div></div><div class="rush-row" ${rushClick}><span class="rush-label">🔥 カードラッシュ (A)</span><span class="rush-val price clickable-price">${rushVal}</span></div></div>`;
       });
       container.innerHTML = html;
     }
 
-    // デスクトップ表示 (条件付きクラス付与)
     function renderDesktop(rows){
       const container = document.getElementById('tableView');
       if(window.innerWidth < 768) { container.innerHTML = ""; return; }
-
-      if(rows.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">データなし</div>`;
-        return;
-      }
-
+      if(rows.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">データなし</div>`; return; }
       let html = `<table class="res-tbl"><thead><tr>`;
-      const headers = [
-        {n:"カード名", w:"auto"}, {n:"画像", w:"70px"},
-        {n:"状態A", w:""}, {n:"状態A-", w:""}, {n:"状態B", w:""}, {n:"状態C", w:""}, {n:"状態D", w:""},
-        {n:"ラッシュA", w:"", cls:"rush-header"}
-      ];
+      const headers = [{n:"カード名", w:"auto"}, {n:"画像", w:"70px"},{n:"状態A", w:""}, {n:"状態A-", w:""}, {n:"状態B", w:""}, {n:"状態C", w:""}, {n:"状態D", w:""},{n:"ラッシュA", w:"", cls:"rush-header"}];
       headers.forEach(h => html += `<th class="${h.cls||''}" width="${h.w}">${h.n}</th>`);
       html += `</tr></thead><tbody>`;
-
       rows.forEach(r => {
         const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
-        
-        // ▼▼▼ ラッシュ価格がない場合はクラスを付与 ▼▼▼
         const hasRush = (pRush && !isNaN(pRush));
         const trClass = hasRush ? "" : "row-no-rush";
-
         const imgTag = (img && /^http/.test(img)) ? `<img class="tbl-thumb" src="${img}" onclick="showModal('${img}')">` : "";
-        
         const modelMatch = name.match(/\{(.+?)\}/);
         const copyTextVal = modelMatch ? modelMatch[1] : name;
         const copyLabel = modelMatch ? "型番" : "名";
         const copyBtn = `<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span>`;
-
         const mkPriceTd = (val, extraCls="") => {
            if(val && !isNaN(val)) return `<td class="price clickable-price ${extraCls}" onclick="copyText('${val}','¥${Number(val).toLocaleString()}')">${fmtPrice(val)}</td>`;
            return `<td class="price ${extraCls}">${fmtPrice(val)}</td>`;
         };
-
-        html += `<tr class="${trClass}">
-          <td>${highlight(name)}${copyBtn}</td>
-          <td>${imgTag}</td>
-          ${mkPriceTd(pA)} ${mkPriceTd(pAm)} ${mkPriceTd(pB)} ${mkPriceTd(pC)} ${mkPriceTd(pD)}
-          ${mkPriceTd(pRush, "rush-col")}
-        </tr>`;
+        html += `<tr class="${trClass}"><td>${highlight(name)}${copyBtn}</td><td>${imgTag}</td>${mkPriceTd(pA)} ${mkPriceTd(pAm)} ${mkPriceTd(pB)} ${mkPriceTd(pC)} ${mkPriceTd(pD)}${mkPriceTd(pRush, "rush-col")}</tr>`;
       });
       html += `</tbody></table>`;
       container.innerHTML = html;
     }
 
-    // --- ユーティリティ関数 ---
-
     function fetchLastUpdated() {
       const area = document.getElementById('lastUpdatedArea');
-      fetch(API_URL + "?action=last_updated&t=" + new Date().getTime())
+      const timestamp = new Date().getTime();
+      return fetch(`${API_URL}?action=last_updated&t=${timestamp}`)
         .then(r => r.json())
         .then(res => {
             if (res.status && res.date) {
@@ -447,32 +408,18 @@
                 area.innerHTML = `🔄 最終更新: <b>${fmt}</b>`;
             } else { area.innerHTML = "更新日時不明"; }
         })
-        .catch(e => { area.innerHTML = "更新日時エラー"; });
+        .catch(() => { area.innerHTML = "更新日時エラー"; });
     }
 
     function fetchCategories() {
-        fetch(API_URL + "?action=categories")
+        const timestamp = new Date().getTime();
+        return fetch(`${API_URL}?action=categories&t=${timestamp}`)
         .then(r => r.json())
         .then(list => {
           const sel = document.getElementById('categorySelect');
           sel.innerHTML = '<option value="">全カテゴリ</option>';
           list.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.innerText = c; sel.appendChild(opt); });
         });
-    }
-
-    function manualReload() {
-      const btn = document.getElementById('btnReload');
-      btn.classList.add('spinning');
-      fetchLastUpdated();
-      loadAllData().then(() => {
-        setTimeout(() => {
-          btn.classList.remove('spinning');
-          const t = document.getElementById('toast');
-          document.getElementById('toastMsg').innerText = "最新情報を確認しました";
-          t.classList.add('show');
-          setTimeout(() => t.classList.remove('show'), 2000);
-        }, 1000);
-      });
     }
 
     function setupUI(){
@@ -484,23 +431,13 @@
         document.documentElement.style.setProperty('--f-size', v);
         localStorage.setItem("tk_f", v);
       });
-
       const tInput = document.getElementById('thresholdInput');
       const sThr = localStorage.getItem("tk_t");
-      if(sThr) { 
-        tInput.value = sThr; 
-        state.thresholdA = Number(sThr);
-        document.getElementById('thresholdChip').classList.add('active');
-      }
+      if(sThr) { tInput.value = sThr; state.thresholdA = Number(sThr); document.getElementById('thresholdChip').classList.add('active'); }
       tInput.addEventListener('input', (e) => {
          const val = e.target.value;
-         if(val && Number(val) > 0) {
-           state.thresholdA = Number(val);
-           document.getElementById('thresholdChip').classList.add('active');
-         } else {
-           state.thresholdA = null;
-           document.getElementById('thresholdChip').classList.remove('active');
-         }
+         if(val && Number(val) > 0) { state.thresholdA = Number(val); document.getElementById('thresholdChip').classList.add('active'); }
+         else { state.thresholdA = null; document.getElementById('thresholdChip').classList.remove('active'); }
          localStorage.setItem("tk_t", val);
          applyLocalFilter();
       });
@@ -510,13 +447,10 @@
       const p = document.getElementById('pager');
       if(max <= 1) { p.innerHTML = ""; return; }
       const makeBtn = (lbl, target, dis) => `<btn onclick="state.page=${target};render();window.scrollTo({top:0,behavior:'smooth'})" class="${dis?'disabled':''}">${lbl}</btn>`;
-      p.innerHTML = makeBtn("«", 1, curr===1) + makeBtn("‹", curr-1, curr===1) + 
-                    `<span style="display:flex;align-items:center;font-size:14px;color:#666;">${curr} / ${max}</span>` +
-                    makeBtn("›", curr+1, curr===max) + makeBtn("»", max, curr===max);
+      p.innerHTML = makeBtn("«", 1, curr===1) + makeBtn("‹", curr-1, curr===1) + `<span style="display:flex;align-items:center;font-size:14px;color:#666;">${curr} / ${max}</span>` + makeBtn("›", curr+1, curr===max) + makeBtn("»", max, curr===max);
     }
 
     function fmtPrice(v){ return (v === "" || v == null) ? "-" : (isNaN(v) ? v : `<span class="price-yen">¥</span>${Number(v).toLocaleString()}`); }
-    
     function highlight(str){
       if(!str) return "";
       let html = String(str);
@@ -525,31 +459,17 @@
       });
       return html;
     }
-    function normalizeStr(s) {
-        return (s||"").replace(/[\u3041-\u3096]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)).toLowerCase();
-    }
+    function normalizeStr(s) { return (s||"").replace(/[\u3041-\u3096]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)).toLowerCase(); }
     function parseQuery(raw){
       const n = normalizeStr(raw).trim();
       if(!n) return {andTerms:[], orTerms:[]};
       if(n.includes('|')) return {andTerms:[], orTerms:n.split('|').map(s=>s.trim()).filter(Boolean)};
       return {andTerms:n.split(/\s+/).map(s=>s.trim()).filter(Boolean), orTerms:[]};
     }
-    
     function getInitialGroup(name){
       const c = (name||"").charAt(0);
-      if(/[あ-おア-オヴ]/.test(c)) return 'A'; 
-      if(/[か-ごカ-ゴ]/.test(c)) return 'K'; 
-      if(/[さ-ぞサ-ゾ]/.test(c)) return 'S'; 
-      if(/[た-どタ-ド]/.test(c)) return 'T'; 
-      if(/[な-のナ-ノ]/.test(c)) return 'N'; 
-      if(/[は-ぽハ-ポ]/.test(c)) return 'H'; 
-      if(/[ま-もマ-モ]/.test(c)) return 'M'; 
-      if(/[や-よヤ-ヨ]/.test(c)) return 'Y'; 
-      if(/[ら-ろラ-ロ]/.test(c)) return 'R'; 
-      if(/[わ-んワ-ン]/.test(c)) return 'W'; 
-      return 'MISC';
+      if(/[あ-おア-オヴ]/.test(c)) return 'A'; if(/[か-ごカ-ゴ]/.test(c)) return 'K'; if(/[さ-ぞサ-ゾ]/.test(c)) return 'S'; if(/[た-どタ-ド]/.test(c)) return 'T'; if(/[な-のナ-ノ]/.test(c)) return 'N'; if(/[は-ぽハ-ポ]/.test(c)) return 'H'; if(/[ま-もマ-モ]/.test(c)) return 'M'; if(/[や-よヤ-ヨ]/.test(c)) return 'Y'; if(/[ら-ろラ-ロ]/.test(c)) return 'R'; if(/[わ-んワ-ン]/.test(c)) return 'W'; return 'MISC';
     }
-
     function buildInitialBar(){
       const bar = document.getElementById('initialBar');
       bar.innerHTML = "";
@@ -561,24 +481,18 @@
         bar.appendChild(d);
       });
     }
-
     function toggleSort(){
       const lbl = document.getElementById('sortLabel');
       const chip = document.getElementById('sortIcon').parentElement;
-      if(state.sort.idx === 0){
-        state.sort = { idx: 2, dir: 'desc' }; lbl.innerText = "価格順(高)"; chip.classList.add('active');
-      } else {
-        state.sort = { idx: 0, dir: 'asc' }; lbl.innerText = "標準(名前順)"; chip.classList.remove('active');
-      }
+      if(state.sort.idx === 0){ state.sort = { idx: 2, dir: 'desc' }; lbl.innerText = "価格順(高)"; chip.classList.add('active'); }
+      else { state.sort = { idx: 0, dir: 'asc' }; lbl.innerText = "標準(名前順)"; chip.classList.remove('active'); }
       applyLocalFilter(); 
     }
-
     function copyKeyword(){
       const val = document.getElementById('keyword').value;
-      if(!val) return copyText(" ", "空です");
+      if(!val) return;
       copyText(val, "検索ワードをコピーしました");
     }
-
     function copyText(txt, msg){
       navigator.clipboard.writeText(txt).then(() => {
         const t = document.getElementById('toast');
@@ -587,12 +501,10 @@
         setTimeout(() => t.classList.remove('show'), 2000);
       });
     }
-    
     function showModal(src){
       document.getElementById('modalImage').src = src;
       document.getElementById('modal').style.display = 'flex';
     }
-    
     let resizeTimer;
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
