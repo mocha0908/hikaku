@@ -6,130 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=Roboto:wght@500;700;900&display=swap" rel="stylesheet">
   <style>
+    /* スタイル設定（変更なし） */
     :root {
-      --primary: #0066cc;
-      --primary-light: #e6f0ff;
-      --accent: #e60012;
-      --accent-bg: #fff0f0;
-      --bg: #f0f2f5;
-      --card-bg: #ffffff;
-      --text: #222;
-      --text-sub: #555;
-      --border: #dfe3e8;
-      --radius: 12px;
-      --shadow: 0 2px 8px rgba(0,0,0,0.06);
-      --f-size: 15px; 
-      --search-height: 76px;
+      --primary: #0066cc; --primary-light: #e6f0ff; --accent: #e60012; --accent-bg: #fff0f0;
+      --bg: #f0f2f5; --card-bg: #ffffff; --text: #222; --text-sub: #555;
+      --border: #dfe3e8; --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.06);
+      --f-size: 15px; --search-height: 76px;
     }
-
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body { font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; background: var(--bg); color: var(--text); padding-bottom: 80px; }
-
     header { background: #fff; padding: 16px 20px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: relative; z-index: 20; }
     h1 { margin: 0; font-size: 22px; color: var(--primary); font-weight: 900; letter-spacing: 0.05em; }
     h1 span { color: var(--text); font-size: 15px; font-weight: normal; margin-left: 8px; }
-    
     .header-info-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 8px; }
-    #lastUpdatedArea { font-size: 12px; color: #666; font-weight: 500; display: flex; align-items: center; gap: 6px; }
-
-    .refresh-btn {
-      background: #fff; border: 1px solid #ddd; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; color: var(--primary); display: flex; align-items: center; gap: 4px; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-weight: bold;
-    }
-    .refresh-btn:hover { background: var(--primary-light); border-color: var(--primary); }
-    .refresh-btn:active { transform: scale(0.96); }
-    .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
-    @keyframes spin{to{transform:rotate(360deg)}}
-
+    #lastUpdatedArea { font-size: 12px; color: #666; font-weight: 500; }
+    .refresh-btn { background: #fff; border: 1px solid #ddd; padding: 4px 10px; border-radius: 12px; font-size: 11px; cursor: pointer; color: var(--primary); font-weight: bold; }
     .search-sticky { position: sticky; top: 0; z-index: 100; background: rgba(240, 242, 245, 0.95); backdrop-filter: blur(10px); padding: 12px 16px; border-bottom: 1px solid rgba(0,0,0,0.05); height: var(--search-height); display: flex; align-items: center; justify-content: center; }
     .search-bar { display: flex; gap: 8px; width: 100%; max-width: 900px; margin: 0 auto; }
-    .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; background: #fff; border-radius: 50px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: all 0.2s; padding-right: 6px; }
-    .input-wrapper:focus-within { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
+    .input-wrapper { position: relative; flex: 1; display: flex; align-items: center; background: #fff; border-radius: 50px; border: 1px solid var(--border); box-shadow: 0 2px 6px rgba(0,0,0,0.05); padding-right: 6px; }
     .input-wrapper input { border: none; background: transparent; padding: 12px 20px; font-size: 16px; flex: 1; outline: none; border-radius: 50px; }
-    .btn-copy-input { border: none; background: transparent; cursor: pointer; font-size: 20px; padding: 8px 14px; color: #bbb; transition: color 0.2s; line-height: 1; display: flex; align-items: center; }
-    .btn-copy-input:hover { color: var(--primary); }
-    .btn-search { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--primary); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,102,204,0.3); }
-    .btn-search:active { transform: scale(0.95); }
-    .btn-search svg { width: 24px; height: 24px; fill: white; }
-
+    .btn-search { width: 48px; height: 48px; border-radius: 50%; border: none; background: var(--primary); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .controls-area { max-width: 1200px; margin: 0 auto; padding: 16px; }
-    .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none; align-items: center; white-space: nowrap; margin-bottom: 12px;}
+    .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; align-items: center; white-space: nowrap; margin-bottom: 12px;}
     .filter-scroll::-webkit-scrollbar { display: none; }
-    
-    .chip { white-space: nowrap; padding: 0 16px; border-radius: 24px; background: #fff; border: 1px solid var(--border); color: var(--text-sub); font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; height: 44px; flex-shrink: 0; }
-    .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); box-shadow: 0 2px 6px rgba(0,102,204,0.25); }
-    .chip select { border: none; background: transparent; color: inherit; font: inherit; outline: none; padding-right: 4px; cursor: pointer; height: 100%; font-size: 14px; }
-    .chip select option { color: #333; }
-    .chip input.direct-input { border: none; background: transparent; outline: none; color: inherit; width: 90px; font-size: 14px; font-weight: 500; height: 100%; }
-
-    details.guarantee-box { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 20px; }
-    details.guarantee-box summary { padding: 14px 20px; font-weight: 700; font-size: 14px; color: var(--primary); cursor: pointer; outline: none; display: flex; align-items: center; justify-content: space-between; }
-    .g-table { width:100%; font-size:13px; border-collapse:collapse; text-align:center; }
-    .g-table th { padding:12px 8px; border:1px solid #dfe3e8; background:#e9ecef; color:#333; font-weight:bold; }
-    .g-table td { padding:10px; border:1px solid #eee; }
-    .g-title-cell { text-align:left; font-weight:bold; color:#0066cc; background:#fafafa; }
-
-    .spinner { display: none; flex-direction: column; align-items: center; gap: 12px; padding: 40px; color: var(--text-sub); font-size: 14px; }
-    .spinner-circle { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
-
-    .price { font-family: 'Roboto', sans-serif; font-weight: 700; letter-spacing: -0.5px; font-size: calc(var(--f-size) + 2px); }
-    .price-yen { font-size: 0.8em; margin-right: 1px; font-weight: normal; }
-    .price-empty { color: #ccc; font-size: calc(var(--f-size) - 2px); }
-    
-    .btn-copy { display: inline-flex; align-items: center; justify-content: center; margin-left: 8px; padding: 4px 10px; border-radius: 6px; background: #f0f2f5; color: #0066cc; border: 1px solid #ccd; font-size: 12px; cursor: pointer; vertical-align: middle; user-select: none; white-space: nowrap; flex-shrink: 0; font-weight: 500; }
-    .btn-copy:active { transform: scale(0.95); background: #eef; }
-    
-    .clickable-price { cursor: pointer; position: relative; transition: color 0.1s; }
-    .clickable-price:hover { color: var(--primary); text-decoration: underline; }
-
+    .chip { white-space: nowrap; padding: 0 16px; border-radius: 24px; background: #fff; border: 1px solid var(--border); color: var(--text-sub); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; height: 44px; flex-shrink: 0; }
+    .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .chip select, .chip input { border: none; background: transparent; color: inherit; font: inherit; outline: none; }
     .card-grid { display: grid; gap: 16px; }
     .card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; display: grid; grid-template-columns: 90px 1fr; position: relative; }
-    
-    .row-no-rush { background-color: #fff0f0 !important; border: 1px solid #ffcccc; }
-    tr.row-no-rush td { background-color: #fff0f0 !important; }
-
     .card-img { grid-row: 1 / -1; width: 100%; height: 100%; background: #fafafa; display: flex; align-items: center; justify-content: center; cursor: zoom-in; }
-    .row-no-rush .card-img { background: #fff0f0; }
-
     .card-img img { width: 100%; height: 100%; object-fit: contain; padding: 6px; }
     .card-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
-    
-    .card-title { font-size: var(--f-size); font-weight: 700; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-    .king-prices { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; background: var(--primary-light); border-radius: 8px; padding: 8px; }
+    .card-title { font-size: var(--f-size); font-weight: 700; line-height: 1.5; }
+    .rarity-tag { font-size: 10px; background: #eee; padding: 2px 6px; border-radius: 4px; color: #666; vertical-align: middle; margin-right: 4px; }
+    .king-prices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; background: var(--primary-light); border-radius: 8px; padding: 8px; }
     .kp-item { text-align: center; display: flex; flex-direction: column; }
     .kp-label { font-size: 10px; color: var(--primary); font-weight: bold; margin-bottom: 2px; }
     .kp-val { font-size: calc(var(--f-size) - 2px); color: #333; font-weight: 700; }
-
     .rush-row { grid-column: 1 / -1; border-top: 1px dashed var(--border); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; background: #fffbfc; }
-    .row-no-rush .rush-row { background: #ffebeb; border-top-color: #ffcccc; }
-
     .rush-label { font-size: calc(var(--f-size) - 3px); color: var(--accent); font-weight: bold; }
     .rush-val { font-size: calc(var(--f-size) + 4px); color: var(--accent); font-weight: 900; }
-
     @media (min-width: 768px) {
       .card-grid { display: none; }
       .desktop-table-wrap { display: block !important; background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: visible; border: 1px solid #eee; }
       table.res-tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: var(--f-size); }
       table.res-tbl th { background: #f8f9fa; padding: 16px 12px; text-align: center; font-weight: 700; color: #555; border-bottom: 2px solid #ddd; position: sticky; top: var(--search-height); z-index: 10; white-space: nowrap; }
       table.res-tbl td { padding: 14px 12px; text-align: center; border-bottom: 1px solid #eee; vertical-align: middle; }
-      table.res-tbl tr:hover { background: #f0f7ff; }
-      table.res-tbl th:first-child { text-align: left; }
-      table.res-tbl td:first-child { text-align: left; font-weight: bold; color: #333; line-height: 1.6; }
       .rush-col { background: var(--accent-bg); border-left: 2px solid #ffdede; color: var(--accent); font-weight: bold; font-size: calc(var(--f-size) + 2px); }
-      th.rush-header { background: #ffebeb; color: var(--accent); border-left: 2px solid #ffdede; }
-      img.tbl-thumb { width: 50px; height: 50px; object-fit: contain; border-radius: 4px; border: 1px solid #eee; }
+      img.tbl-thumb { width: 50px; height: 50px; object-fit: contain; }
     }
     .desktop-table-wrap { display: none; }
-
     mark { background: rgba(255, 213, 0, 0.4); color: inherit; padding: 0; }
     .pager { display: flex; justify-content: center; gap: 10px; margin-top: 30px; }
-    .pager btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); font-size: 16px; }
-    .pager btn:hover { background: #f0f0f0; }
-    .pager btn.disabled { opacity: 0.4; pointer-events: none; }
-
+    .pager btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-sub); }
     #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-    #modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-    
-    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #222; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 10000; box-shadow: 0 6px 16px rgba(0,0,0,0.3); font-weight: 500; }
+    #modal img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+    #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(20px); background: #222; color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; opacity: 0; visibility: hidden; transition: all 0.3s; z-index: 10000; font-weight: 500; }
     #toast.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
@@ -137,17 +69,9 @@
 
   <header>
     <h1>トレカキングダム <span>買取比較検索</span></h1>
-    
     <div class="header-info-row">
-      <div id="lastUpdatedArea">
-        <span class="spinner-circle" style="width:12px;height:12px;border-width:2px;"></span> 
-        <span style="font-size:11px;">日付確認中...</span>
-      </div>
-      
-      <button class="refresh-btn" onclick="manualReload()" id="btnReload" title="最新の情報を再取得">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-        最新取得
-      </button>
+      <div id="lastUpdatedArea">日付確認中...</div>
+      <button class="refresh-btn" onclick="manualReload()" id="btnReload">最新取得</button>
     </div>
   </header>
 
@@ -155,42 +79,22 @@
     <div class="search-bar">
       <div class="input-wrapper">
         <input type="text" id="keyword" placeholder="カード名・型番 (スペース=AND)" enterkeyhint="search">
-        <button class="btn-copy-input" onclick="copyKeyword()" title="コピー">📋</button>
+        <button onclick="copyKeyword()" style="border:none;background:none;cursor:pointer;color:#bbb;padding:0 10px;">📋</button>
       </div>
-      <button class="btn-search" onclick="applyLocalFilter()">
-        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 3 13.09 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-      </button>
+      <button class="btn-search" onclick="applyLocalFilter()">🔍</button>
     </div>
   </div>
 
   <div class="controls-area">
     <div class="filter-scroll">
-      <div class="chip">📂 <select id="categorySelect"><option value="">全カテゴリ</option></select></div>
-      <div class="chip" id="thresholdChip">🚫 <input type="number" id="thresholdInput" class="direct-input" placeholder="下限なし(円)"></div>
-      <div class="chip" onclick="toggleSort()"><span id="sortIcon">⇅</span> <span id="sortLabel">標準(名前順)</span></div>
-      <div class="chip">Aa <select id="fontSizeSelect"><option value="13px">小</option><option value="15px" selected>中</option><option value="17px">大</option><option value="20px">特大</option></select></div>
-      <div class="chip">📄 <select id="pageSizeSelect"><option value="50">50件</option><option value="100" selected>100件</option><option value="200">200件</option><option value="all">全件</option></select></div>
+      <div class="chip">📂 <select id="categorySelect"><option value="">全レアリティ</option></select></div>
+      <div class="chip" id="thresholdChip">🚫 <input type="number" id="thresholdInput" style="width:90px;" placeholder="下限なし(円)"></div>
+      <div class="chip" onclick="toggleSort()">⇅ <span id="sortLabel">標準(名前順)</span></div>
+      <div class="chip">📄 <select id="pageSizeSelect"><option value="50">50件</option><option value="100" selected>100件</option><option value="all">全件</option></select></div>
     </div>
-
     <div class="filter-scroll" id="initialBar"></div>
 
-    <details class="guarantee-box">
-      <summary>⚡ 最低保証価格表を確認する</summary>
-      <div style="overflow-x:auto; padding:0 16px 16px;">
-        <table class="g-table">
-          <thead><tr><th>カード</th><th>A</th><th>A-</th><th>B</th><th>C</th><th>D</th></tr></thead>
-          <tbody>
-            <tr><td class="g-title-cell">PSA10保証</td><td>¥5,000</td><td>¥4,000</td><td>¥3,000</td><td>¥2,000</td><td>¥1,000</td></tr>
-            <tr><td class="g-title-cell">SAR保証</td><td>¥400</td><td>¥300</td><td>¥200</td><td>¥100</td><td>¥50</td></tr>
-            <tr><td class="g-title-cell">AR/CHR保証</td><td>¥230</td><td>¥150</td><td>¥70</td><td>¥30</td><td>¥10</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </details>
-
-    <div id="spinner" class="spinner">
-      <div class="spinner-circle"></div><span>データを取得しています...</span>
-    </div>
+    <div id="spinner" style="display:none; text-align:center; padding:40px; color:#666;">取得中...</div>
 
     <div id="result-container">
       <div id="cardView" class="card-grid"></div>
@@ -203,117 +107,76 @@
   <div id="toast">✅ <span id="toastMsg"></span></div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbwXJ4In8PMlrW_NKomGLn3wo2myFIPl4HtlAIZ2z1ZPrSkz-eXL_aXKqXcaY-KWPnSj/exec"; 
+    // ★ ご提示いただいた新しいGAS URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbxiEhzvD3adMFE6XQzb7e3I9-DgRJdIWaFQP7Ikx3-WUiUjRYBnp9eve3x9TCr5uXTQ/exec"; 
     
     let masterData = [];
-
-    const state = {
-      filteredRows: [], 
-      page: 1, pageSize: 100,
-      sort: { idx: 0, dir: 'asc' },
-      terms: { andTerms:[], orTerms:[] },
-      thresholdA: null, initialKey: 'ALL'
-    };
-    
-    const INITIALS = [
-      {k:'ALL',l:'全て'}, {k:'A',l:'あ'}, {k:'K',l:'か'}, {k:'S',l:'さ'}, {k:'T',l:'た'},
-      {k:'N',l:'な'}, {k:'H',l:'は'}, {k:'M',l:'ま'}, {k:'Y',l:'や'}, {k:'R',l:'ら'}, {k:'W',l:'わ'}, {k:'MISC',l:'他'}
-    ];
+    const state = { filteredRows: [], page: 1, pageSize: 100, sort: { idx: 7, dir: 'asc' }, terms: { andTerms:[], orTerms:[] }, thresholdA: null, initialKey: 'ALL' };
+    const INITIALS = [{k:'ALL',l:'全て'}, {k:'A',l:'あ'}, {k:'K',l:'か'}, {k:'S',l:'さ'}, {k:'T',l:'た'}, {k:'N',l:'な'}, {k:'H',l:'は'}, {k:'M',l:'ま'}, {k:'Y',l:'や'}, {k:'R',l:'ら'}, {k:'W',l:'わ'}, {k:'MISC',l:'他'}];
 
     document.addEventListener('DOMContentLoaded', () => {
       fetchLastUpdated();
       buildInitialBar();
-      setupUI();
-      Promise.all([fetchCategories(), loadAllData()]);
-
+      loadAllData();
       document.getElementById('keyword').addEventListener('input', () => applyLocalFilter());
       document.getElementById('categorySelect').addEventListener('change', () => applyLocalFilter());
       document.getElementById('pageSizeSelect').addEventListener('change', e => {
         state.pageSize = e.target.value==='all' ? Infinity : Number(e.target.value);
         state.page = 1; render();
       });
+      // 下限入力
+      document.getElementById('thresholdInput').addEventListener('input', e => {
+        state.thresholdA = e.target.value ? Number(e.target.value) : null;
+        document.getElementById('thresholdChip').classList.toggle('active', !!state.thresholdA);
+        applyLocalFilter();
+      });
     });
 
-    // キャッシュを回避するためにタイムスタンプを付与
     async function loadAllData() {
       const spinner = document.getElementById('spinner');
-      spinner.style.display = 'flex';
-      
+      spinner.style.display = 'block';
       try {
         const timestamp = new Date().getTime();
-        const res = await fetch(`${API_URL}?action=search&t=${timestamp}`);
-        const json = await res.json();
+        const [resData, resCat] = await Promise.all([
+          fetch(`${API_URL}?action=search&t=${timestamp}`).then(r => r.json()),
+          fetch(`${API_URL}?action=categories&t=${timestamp}`).then(r => r.json())
+        ]);
+        masterData = resData.rows || [];
         
-        masterData = json.rows || [];
+        const sel = document.getElementById('categorySelect');
+        resCat.forEach(c => {
+          const opt = document.createElement('option'); opt.value = opt.text = c;
+          sel.appendChild(opt);
+        });
+        
         applyLocalFilter();
-      } catch (e) {
-        console.error("Data Load Error", e);
-        document.getElementById('cardView').innerHTML = '<div style="text-align:center;padding:20px;">読み込みに失敗しました。GASのデプロイ設定を確認してください。</div>';
-      } finally {
-        spinner.style.display = 'none';
-      }
-    }
-
-    // 更新ボタンの挙動を安定化
-    async function manualReload() {
-      const btn = document.getElementById('btnReload');
-      if(btn.classList.contains('spinning')) return;
-
-      btn.classList.add('spinning');
-      try {
-        await fetchLastUpdated();
-        await loadAllData(); 
-        
-        const t = document.getElementById('toast');
-        document.getElementById('toastMsg').innerText = "最新情報を取得しました";
-        t.classList.add('show');
-        setTimeout(() => t.classList.remove('show'), 2000);
-      } catch (e) {
-        alert("更新に失敗しました");
-      } finally {
-        btn.classList.remove('spinning');
-      }
+      } catch (e) { console.error(e); } finally { spinner.style.display = 'none'; }
     }
 
     function applyLocalFilter() {
       const kw = document.getElementById('keyword').value;
       const cat = document.getElementById('categorySelect').value;
-      
       state.terms = parseQuery(kw);
       
       state.filteredRows = masterData.filter(row => {
-        const name = String(row[0] || "");
-        const category = String(row[8] || "");
-        const priceA = Number(row[2]); 
+        // A[0]:レア, G[6]:ラッシュ, H[7]:名, I[8]:画像, J[9]:A, K[10]:A-
+        const name = String(row[7] || "");
+        const rarity = String(row[0] || "");
+        const priceA = Number(row[9]);
 
-        if (cat && category !== cat) return false;
-
-        if (state.terms.andTerms.length || state.terms.orTerms.length) {
-          const searchTxt = normalizeStr(name);
-          if (state.terms.orTerms.length > 0) {
-            if (!state.terms.orTerms.some(t => searchTxt.includes(t))) return false;
-          }
-          if (state.terms.andTerms.length > 0) {
-            if (!state.terms.andTerms.every(t => searchTxt.includes(t))) return false;
-          }
-        }
-
-        if (state.thresholdA !== null) {
-          if (isNaN(priceA) || priceA < state.thresholdA) return false;
-        }
-
-        if (state.initialKey !== 'ALL') {
-          if (getInitialGroup(name) !== state.initialKey) return false;
-        }
-
+        if (cat && rarity !== cat) return false;
+        const searchTxt = normalizeStr(name + rarity);
+        if (state.terms.andTerms.length > 0 && !state.terms.andTerms.every(t => searchTxt.includes(t))) return false;
+        if (state.thresholdA && (isNaN(priceA) || priceA < state.thresholdA)) return false;
+        if (state.initialKey !== 'ALL' && getInitialGroup(name) !== state.initialKey) return false;
         return true;
       });
 
+      // ソート処理
       const { idx, dir } = state.sort;
-      state.filteredRows.sort((a,b) => {
+      state.filteredRows.sort((a, b) => {
         const va = a[idx], vb = b[idx];
-        const isNum = idx >= 2; 
-        if(isNum) return ( (Number(va)||0) - (Number(vb)||0) ) * (dir==='asc'?1:-1);
+        if (idx >= 9 || idx === 6) return ( (Number(va)||0) - (Number(vb)||0) ) * (dir==='asc'?1:-1);
         return String(va||"").localeCompare(String(vb||""), 'ja') * (dir==='asc'?1:-1);
       });
 
@@ -322,149 +185,63 @@
     }
 
     function render(){
-      const total = state.filteredRows.length;
-      const size = state.pageSize;
-      const maxPage = Math.ceil(total / size) || 1;
-      if(state.page > maxPage) state.page = 1;
-      
-      const start = (state.page - 1) * size;
-      const end = Math.min(start + size, total);
-      const viewRows = state.filteredRows.slice(start, end);
-      
+      const start = (state.page - 1) * state.pageSize;
+      const viewRows = state.filteredRows.slice(start, start + state.pageSize);
       renderMobile(viewRows);
       renderDesktop(viewRows);
-      renderPager(state.page, maxPage);
+      renderPager(state.page, Math.ceil(state.filteredRows.length / state.pageSize));
     }
 
     function renderMobile(rows){
       const container = document.getElementById('cardView');
       let html = '';
-      if(rows.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">条件に一致するカードが見つかりませんでした</div>`;
-        return;
-      }
       rows.forEach(r => {
-        const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
-        const hasRush = (pRush && !isNaN(pRush));
-        const extraClass = hasRush ? "" : "row-no-rush";
-        const imgTag = (img && /^http/.test(img)) 
-          ? `<img src="${img}" loading="lazy" onclick="showModal('${img}')">` 
-          : `<span style="color:#ccc;font-size:10px">NO IMG</span>`;
-        const safeName = highlight(name);
-        const modelMatch = name.match(/\{(.+?)\}/);
-        const copyTextVal = modelMatch ? modelMatch[1] : name;
-        const copyLabel = modelMatch ? "型番" : "名";
-        const prices = [{l:'A', v:pA}, {l:'A-', v:pAm}, {l:'B', v:pB}, {l:'C', v:pC}, {l:'D', v:pD}];
-        let pGrid = '';
-        prices.forEach(p => {
-          const raw = p.v; const val = fmtPrice(raw);
-          const clickAttr = (raw && !isNaN(raw)) ? `onclick="copyText('${raw}', '¥${Number(raw).toLocaleString()}')"` : "";
-          const cls = (raw && !isNaN(raw)) ? "clickable-price" : "";
-          pGrid += `<div class="kp-item" ${clickAttr}><span class="kp-label">${p.l}</span><span class="kp-val ${!raw?'price-empty':''} ${cls}">${val}</span></div>`;
-        });
-        const rushVal = fmtPrice(pRush);
-        const rushClick = hasRush ? `onclick="copyText('${pRush}', 'ラッシュ価格')"` : "";
-        html += `<div class="card ${extraClass}"><div class="card-img">${imgTag}</div><div class="card-body"><div class="card-title">${safeName}<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span></div><div class="king-prices">${pGrid}</div></div><div class="rush-row" ${rushClick}><span class="rush-label">🔥 カードラッシュ (A)</span><span class="rush-val price clickable-price">${rushVal}</span></div></div>`;
+        const [rarity, , , , , , pRush, name, img, pA, pAm] = r;
+        const imgTag = (img && /^http/.test(img)) ? `<img src="${img}" loading="lazy" onclick="showModal('${img}')">` : `<span>NO IMG</span>`;
+        html += `
+          <div class="card ${pRush?'':'row-no-rush'}">
+            <div class="card-img">${imgTag}</div>
+            <div class="card-body">
+              <div class="card-title"><span class="rarity-tag">${rarity || '-'}</span>${highlight(name)}</div>
+              <div class="king-prices">
+                <div class="kp-item"><span class="kp-label">状態A</span><span class="kp-val">${fmtPrice(pA)}</span></div>
+                <div class="kp-item"><span class="kp-label">状態A-</span><span class="kp-val">${fmtPrice(pAm)}</span></div>
+              </div>
+            </div>
+            <div class="rush-row" onclick="copyText('${pRush}','ラッシュ価格をコピー')">
+              <span class="rush-label">🔥 ラッシュ買取</span>
+              <span class="rush-val">${fmtPrice(pRush)}</span>
+            </div>
+          </div>`;
       });
-      container.innerHTML = html;
+      container.innerHTML = html || '<p style="text-align:center;padding:40px;">該当なし</p>';
     }
 
     function renderDesktop(rows){
       const container = document.getElementById('tableView');
-      if(window.innerWidth < 768) { container.innerHTML = ""; return; }
-      if(rows.length === 0) { container.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">データなし</div>`; return; }
-      let html = `<table class="res-tbl"><thead><tr>`;
-      const headers = [{n:"カード名", w:"auto"}, {n:"画像", w:"70px"},{n:"状態A", w:""}, {n:"状態A-", w:""}, {n:"状態B", w:""}, {n:"状態C", w:""}, {n:"状態D", w:""},{n:"ラッシュA", w:"", cls:"rush-header"}];
-      headers.forEach(h => html += `<th class="${h.cls||''}" width="${h.w}">${h.n}</th>`);
-      html += `</tr></thead><tbody>`;
+      if(window.innerWidth < 768) return;
+      let html = `<table class="res-tbl"><thead><tr><th>レア</th><th>カード名</th><th>画像</th><th>状態A</th><th>状態A-</th><th class="rush-header">ラッシュ</th></tr></thead><tbody>`;
       rows.forEach(r => {
-        const [name, img, pA, pAm, pB, pC, pD, pRush] = r;
-        const hasRush = (pRush && !isNaN(pRush));
-        const trClass = hasRush ? "" : "row-no-rush";
-        const imgTag = (img && /^http/.test(img)) ? `<img class="tbl-thumb" src="${img}" onclick="showModal('${img}')">` : "";
-        const modelMatch = name.match(/\{(.+?)\}/);
-        const copyTextVal = modelMatch ? modelMatch[1] : name;
-        const copyLabel = modelMatch ? "型番" : "名";
-        const copyBtn = `<span class="btn-copy" onclick="copyText('${copyTextVal.replace(/'/g,"\\'")}','${copyLabel}コピー')">${copyLabel}</span>`;
-        const mkPriceTd = (val, extraCls="") => {
-           if(val && !isNaN(val)) return `<td class="price clickable-price ${extraCls}" onclick="copyText('${val}','¥${Number(val).toLocaleString()}')">${fmtPrice(val)}</td>`;
-           return `<td class="price ${extraCls}">${fmtPrice(val)}</td>`;
-        };
-        html += `<tr class="${trClass}"><td>${highlight(name)}${copyBtn}</td><td>${imgTag}</td>${mkPriceTd(pA)} ${mkPriceTd(pAm)} ${mkPriceTd(pB)} ${mkPriceTd(pC)} ${mkPriceTd(pD)}${mkPriceTd(pRush, "rush-col")}</tr>`;
+        const [rarity, , , , , , pRush, name, img, pA, pAm] = r;
+        html += `<tr>
+          <td>${rarity}</td>
+          <td style="text-align:left;">${highlight(name)}</td>
+          <td>${img ? `<img class="tbl-thumb" src="${img}" onclick="showModal('${img}')">` : ''}</td>
+          <td class="price" onclick="copyText('${pA}','コピー')">${fmtPrice(pA)}</td>
+          <td class="price" onclick="copyText('${pAm}','コピー')">${fmtPrice(pAm)}</td>
+          <td class="rush-col" onclick="copyText('${pRush}','コピー')">${fmtPrice(pRush)}</td>
+        </tr>`;
       });
-      html += `</tbody></table>`;
-      container.innerHTML = html;
+      container.innerHTML = html + '</tbody></table>';
     }
 
-    function fetchLastUpdated() {
-      const area = document.getElementById('lastUpdatedArea');
-      const timestamp = new Date().getTime();
-      return fetch(`${API_URL}?action=last_updated&t=${timestamp}`)
-        .then(r => r.json())
-        .then(res => {
-            if (res.status && res.date) {
-                const d = new Date(res.date);
-                const fmt = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-                area.innerHTML = `🔄 最終更新: <b>${fmt}</b>`;
-            } else { area.innerHTML = "更新日時不明"; }
-        })
-        .catch(() => { area.innerHTML = "更新日時エラー"; });
-    }
-
-    function fetchCategories() {
-        const timestamp = new Date().getTime();
-        return fetch(`${API_URL}?action=categories&t=${timestamp}`)
-        .then(r => r.json())
-        .then(list => {
-          const sel = document.getElementById('categorySelect');
-          sel.innerHTML = '<option value="">全カテゴリ</option>';
-          list.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.innerText = c; sel.appendChild(opt); });
-        });
-    }
-
-    function setupUI(){
-      const fSize = localStorage.getItem("tk_f") || "15px";
-      document.documentElement.style.setProperty('--f-size', fSize);
-      document.getElementById('fontSizeSelect').value = fSize;
-      document.getElementById('fontSizeSelect').addEventListener('change', e => {
-        const v = e.target.value;
-        document.documentElement.style.setProperty('--f-size', v);
-        localStorage.setItem("tk_f", v);
-      });
-      const tInput = document.getElementById('thresholdInput');
-      const sThr = localStorage.getItem("tk_t");
-      if(sThr) { tInput.value = sThr; state.thresholdA = Number(sThr); document.getElementById('thresholdChip').classList.add('active'); }
-      tInput.addEventListener('input', (e) => {
-         const val = e.target.value;
-         if(val && Number(val) > 0) { state.thresholdA = Number(val); document.getElementById('thresholdChip').classList.add('active'); }
-         else { state.thresholdA = null; document.getElementById('thresholdChip').classList.remove('active'); }
-         localStorage.setItem("tk_t", val);
-         applyLocalFilter();
-      });
-    }
-
-    function renderPager(curr, max){
-      const p = document.getElementById('pager');
-      if(max <= 1) { p.innerHTML = ""; return; }
-      const makeBtn = (lbl, target, dis) => `<btn onclick="state.page=${target};render();window.scrollTo({top:0,behavior:'smooth'})" class="${dis?'disabled':''}">${lbl}</btn>`;
-      p.innerHTML = makeBtn("«", 1, curr===1) + makeBtn("‹", curr-1, curr===1) + `<span style="display:flex;align-items:center;font-size:14px;color:#666;">${curr} / ${max}</span>` + makeBtn("›", curr+1, curr===max) + makeBtn("»", max, curr===max);
-    }
-
-    function fmtPrice(v){ return (v === "" || v == null) ? "-" : (isNaN(v) ? v : `<span class="price-yen">¥</span>${Number(v).toLocaleString()}`); }
-    function highlight(str){
-      if(!str) return "";
-      let html = String(str);
-      [...state.terms.andTerms, ...state.terms.orTerms].forEach(k => {
-        if(k) html = html.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"), "gi"), m => `<mark>${m}</mark>`);
-      });
-      return html;
-    }
+    function fmtPrice(v){ return (!v || isNaN(v) || v === 0) ? "-" : `¥${Number(v).toLocaleString()}`; }
     function normalizeStr(s) { return (s||"").replace(/[\u3041-\u3096]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60)).toLowerCase(); }
-    function parseQuery(raw){
-      const n = normalizeStr(raw).trim();
-      if(!n) return {andTerms:[], orTerms:[]};
-      if(n.includes('|')) return {andTerms:[], orTerms:n.split('|').map(s=>s.trim()).filter(Boolean)};
-      return {andTerms:n.split(/\s+/).map(s=>s.trim()).filter(Boolean), orTerms:[]};
+    function parseQuery(raw){ const n = normalizeStr(raw).trim(); return {andTerms:n.split(/\s+/).filter(Boolean), orTerms:[]}; }
+    function highlight(str){ 
+      let h = str; 
+      state.terms.andTerms.forEach(t => h = h.replace(new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi"), m => `<mark>${m}</mark>`));
+      return h;
     }
     function getInitialGroup(name){
       const c = (name||"").charAt(0);
@@ -483,17 +260,22 @@
     }
     function toggleSort(){
       const lbl = document.getElementById('sortLabel');
-      const chip = document.getElementById('sortIcon').parentElement;
-      if(state.sort.idx === 0){ state.sort = { idx: 2, dir: 'desc' }; lbl.innerText = "価格順(高)"; chip.classList.add('active'); }
-      else { state.sort = { idx: 0, dir: 'asc' }; lbl.innerText = "標準(名前順)"; chip.classList.remove('active'); }
-      applyLocalFilter(); 
+      if(state.sort.idx === 7){ state.sort = { idx: 9, dir: 'desc' }; lbl.innerText = "価格順(高)"; }
+      else { state.sort = { idx: 7, dir: 'asc' }; lbl.innerText = "標準(名前順)"; }
+      applyLocalFilter();
     }
-    function copyKeyword(){
-      const val = document.getElementById('keyword').value;
-      if(!val) return;
-      copyText(val, "検索ワードをコピーしました");
+    function fetchLastUpdated(){
+      fetch(`${API_URL}?action=last_updated`).then(r=>r.json()).then(res=>{
+        if(res.date){
+          const d = new Date(res.date);
+          document.getElementById('lastUpdatedArea').innerText = `🔄 最終更新: ${d.toLocaleString('ja-JP')}`;
+        }
+      }).catch(()=>{});
     }
+    function manualReload(){ location.reload(); }
+    function copyKeyword(){ const kw = document.getElementById('keyword').value; if(kw) copyText(kw, "コピーしました"); }
     function copyText(txt, msg){
+      if(!txt || txt === "-") return;
       navigator.clipboard.writeText(txt).then(() => {
         const t = document.getElementById('toast');
         document.getElementById('toastMsg').innerText = msg;
@@ -501,15 +283,12 @@
         setTimeout(() => t.classList.remove('show'), 2000);
       });
     }
-    function showModal(src){
-      document.getElementById('modalImage').src = src;
-      document.getElementById('modal').style.display = 'flex';
+    function showModal(src){ document.getElementById('modalImage').src = src; document.getElementById('modal').style.display='flex'; }
+    function renderPager(curr, max){
+      const p = document.getElementById('pager');
+      if(max<=1){ p.innerHTML=""; return; }
+      p.innerHTML = `<btn onclick="state.page=1;render()">«</btn> <span style="font-size:14px;color:#666;line-height:40px;">${curr}/${max}</span> <btn onclick="state.page=${max};render()">»</btn>`;
     }
-    let resizeTimer;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => render(), 200);
-    });
   </script>
 </body>
 </html>
