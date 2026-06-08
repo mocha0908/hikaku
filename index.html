@@ -60,12 +60,22 @@
     #modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
     #modal img { max-width: 90%; max-height: 90%; }
     mark { background: rgba(255, 213, 0, 0.4); }
-  </style>
+  
+.copyable{cursor:pointer}
+.copy-btn{margin-left:6px;font-size:12px;cursor:pointer;color:#0066cc}
+.last-update-row{display:flex;justify-content:center;gap:10px;margin-top:8px;font-size:12px}
+.refresh-btn{border:none;background:#0066cc;color:#fff;padding:6px 12px;border-radius:6px;cursor:pointer}
+</style>
 </head>
 <body>
 
 <header>
   <h1>トレカキングダム <span>買取価格比較</span></h1>
+
+<div class="last-update-row">
+<span id="lastVisit">初回アクセス</span>
+<button class="refresh-btn" onclick="refreshPage()">更新</button>
+</div>
 </header>
 
 <div class="search-sticky">
@@ -103,7 +113,33 @@
   const state = { filteredRows: [], sort: { idx: 7, dir: 'asc' }, thresholdA: null, initialKey: 'ALL' };
   const INITIALS = [{k:'ALL',l:'全て'}, {k:'A',l:'あ'}, {k:'K',l:'か'}, {k:'S',l:'さ'}, {k:'T',l:'た'}, {k:'N',l:'な'}, {k:'H',l:'は'}, {k:'M',l:'ま'}, {k:'Y',l:'や'}, {k:'R',l:'ら'}, {k:'W',l:'わ'}];
 
-  document.addEventListener('DOMContentLoaded', () => {
+  
+function copyText(text){
+ navigator.clipboard.writeText(String(text||''));
+ showToast('コピーしました');
+}
+function copyCard(r){
+ const txt=`${r[7]||''}\n型番:${r[1]||''}\n状態A:¥${(r[9]||0).toLocaleString()}\n状態A-:¥${(r[10]||0).toLocaleString()}\nラッシュ:¥${(r[6]||0).toLocaleString()}`;
+ copyText(txt);
+}
+function showToast(msg){
+ const d=document.createElement('div');
+ d.textContent=msg;
+ d.style.cssText='position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 15px;border-radius:8px;z-index:99999';
+ document.body.appendChild(d);
+ setTimeout(()=>d.remove(),1200);
+}
+function showLastVisit(){
+ const v=localStorage.getItem('lastVisit');
+ const e=document.getElementById('lastVisit');
+ if(e)e.textContent=v?`前回更新：${v}`:'初回アクセス';
+}
+function refreshPage(){
+ localStorage.setItem('lastVisit',new Date().toLocaleString('ja-JP'));
+ location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', () => {showLastVisit();
     buildInitialBar();
     loadAllData();
     document.getElementById('keyword').addEventListener('input', () => applyLocalFilter());
@@ -164,9 +200,14 @@
       const rushSearchUrl = `https://www.cardrush-pokemon.jp/product-list?keyword=${encodeURIComponent(r[0] + ' ' + r[1])}`;
       return `
       <div class="card">
-        <div class="card-img"><img src="${r[11]}" onclick="showModal('${r[11]}')" onerror="this.src='https://via.placeholder.com/100?text=No+Image'"></div>
+        <div class="card-img"><img src="${r[11]}" onclick="copyCard(r)" title="カード情報をコピー" onerror="this.src='https://via.placeholder.com/100?text=No+Image'"></div>
         <div class="card-body">
-          <div class="card-title"><span class="rarity-tag">${r[0] || '-'}</span>${r[7]}</div>
+          <div class="card-title">
+<span class="rarity-tag copyable" onclick="copyText('${r[0] || '-'}')">${r[0] || '-'}</span>
+<span class="copyable" onclick="copyText('${r[7]}')">${r[7]}</span>
+<span class="copy-btn" onclick="copyCard(r)">📋</span>
+<div class="copyable" onclick="copyText('${"${r[1]||''}"}')" style="font-size:11px;color:#666;">${r[1]||''}</div>
+</div>
           <div class="king-prices">
             <div class="kp-val"><span class="kp-label">状態A</span>¥${(r[9]||0).toLocaleString()}</div>
             <div class="kp-val"><span class="kp-label">状態A-</span>¥${(r[10]||0).toLocaleString()}</div>
@@ -187,10 +228,10 @@
         const rushSearchUrl = `https://www.cardrush-pokemon.jp/product-list?keyword=${encodeURIComponent(r[0] + ' ' + r[1])}`;
         return `
         <tr>
-          <td>${r[0]}</td>
-          <td style="text-align:left;">${r[7]}</td>
+          <td class='copyable' onclick="copyText('${r[0]}')">${r[0]}</td>
+          <td style="text-align:left;" class='copyable' onclick="copyText('${r[7]}')">${r[7]} 📋</td>
           <td><img src="${r[11]}" style="height:50px;cursor:pointer;" onclick="showModal('${r[11]}')"></td>
-          <td style="font-weight:bold;">¥${(r[9]||0).toLocaleString()}</td>
+          <td style="font-weight:bold;" class='copyable' onclick="copyText(`¥${(r[9]||0).toLocaleString()}`)">¥${(r[9]||0).toLocaleString()}</td>
           <td>¥${(r[10]||0).toLocaleString()}</td>
           <td class="rush-col">¥${(r[6]||0).toLocaleString()}</td>
           <td><a href="${rushSearchUrl}" target="_blank" class="btn-table-search">🔍 検索</a></td>
